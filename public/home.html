@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Home - Railway Reservation</title>
+    <style>
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            color: white;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            background: url('OIP.PNg') no-repeat center center/cover;
+            background-size: cover;
+            position: relative;
+        }
+
+        .overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(14, 13, 13, 0.7);
+        }
+
+        .content {
+            text-align: center;
+            position: relative;
+            z-index: 1; /* Keep content above overlay */
+        }
+
+        h1 {
+            font-size: 28px;
+            font-weight: bold;
+        }
+
+        p {
+            font-size: 18px;
+        }
+
+        .button-container {
+            margin-top: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .btn {
+            width: 200px;
+            padding: 12px;
+            font-size: 16px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            text-align: center;
+        }
+
+        .btn-search {
+            background: green;
+            color: white;
+        }
+
+        .btn-cancel {
+            background: red;
+            color: white;
+        }
+
+        .navbar {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            z-index: 2;
+        }
+
+        .profile {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            cursor: pointer;
+            background: url('https://th.bing.com/th/id/OIP.Cb2uTtakw8uyMyeIK2dO8QHaE8?w=293&h=196&c=7&r=0&o=5&pid=1.7')
+        }
+    </style>
+</head>
+<body>
+
+    <div class="overlay"></div>
+
+    <div class="navbar">
+        <div class="profile" onclick="alert('Profile Clicked!')"></div>
+    </div>
+
+    <div class="content">
+        <h1>Welcome to Railway Reservation</h1>
+        <p>Book your tickets easily and travel safely!</p>
+
+        <div class="button-container">
+            <!-- Search Button with JavaScript Redirection -->
+            <button class="btn btn-search" onclick="window.location.href='search.html';">Search</button>
+            <!-- Cancel Button with JavaScript Redirection -->
+            <button class="btn btn-cancel" onclick="window.location.href='cancel.html';">Cancel</button>
+        </div>
+    </div>
+
+</body>
+</html>

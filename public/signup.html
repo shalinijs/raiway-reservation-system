@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sign Up - Railway Reservation</title>
+    <style>
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            background: url('OIP.png') no-repeat center center/cover;
+            background-size: cover;
+            color: white;
+            position: relative;
+        }
+
+        .overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background:rgba(0, 0, 0, 0); /* Dark overlay for better text visibility */
+        }
+
+        .signup-container {
+            background: rgba(0, 0, 0, 0.842);
+            padding: 40px;
+            border-radius: 8px;
+            text-align: center;
+            width: 350px;
+            position: relative;
+            z-index: 1;
+        }
+
+        h1 {
+            font-size: 30px;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        input {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            border: none;
+            border-radius: 4px;
+            background: #33333377;
+            color: white;
+        }
+
+        button {
+            width: 100%;
+            padding: 10px;
+            background: red;
+            border: none;
+            color: white;
+            font-size: 16px;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+
+        button:hover {
+            background: darkred;
+        }
+
+        .login {
+            margin-top: 15px;
+            font-size: 14px;
+        }
+
+        .login a {
+            color: white;
+            text-decoration: none;
+            font-weight: bold;
+        }
+
+        .login a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="overlay"></div>
+    
+    <div class="signup-container">
+        <h1>Railway Reservation</h1>
+        <h3>Create Account</h3>
+        <form id="signupForm">
+            <input type="email" id="email" placeholder="Email" required>
+            <input type="text" id="username" placeholder="Username" required>
+            <input type="password" id="password" placeholder="Password" required>
+            <input type="password" id="confirmPassword" placeholder="Confirm Password" required>
+            <button type="submit">Sign Up</button>
+        </form>
+        <p class="login">Already have an account? <a href="login.html">Sign in</a></p>
+    </div>
+
+    <script>
+        document.getElementById("signupForm").addEventListener("submit", async (event) => {
+            event.preventDefault();  // Prevent form from submitting the default way
+
+            const password = document.getElementById("password").value.trim();
+            const confirmPassword = document.getElementById("confirmPassword").value.trim();
+
+            // Check if passwords match
+            if (password !== confirmPassword) {
+                alert("Passwords do not match!");
+                return;
+            }
+
+            // Prepare the data to send to the server
+            const userData = {
+                email: document.getElementById("email").value.trim(),
+                username: document.getElementById("username").value.trim(),
+                password: password,
+            };
+
+            try {
+                // Send a POST request to the server to create the new user
+                const response = await fetch('/signup', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(userData),
+                });
+
+                const result = await response.json();
+                if (response.ok) {
+                    alert(result.message);
+                    window.location.href = 'home.html';  // Redirect to home page after successful sign-up
+                } else {
+                    alert(result.message || 'Error occurred!');
+                }
+            } catch (error) {
+                alert('Error during sign-up, please try again.');
+            }
+        });
+    </script>
+</body>
+</html>

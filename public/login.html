@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Railway Reservation</title>
+    <style>
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            background: url('OIP.png') no-repeat center center/cover;
+            background-size: cover;
+            color: white;
+            position: relative;
+        }
+
+        /* Overlay for darkening background image */
+        .overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            height: 100%;
+            width: 100%;
+            background: rgba(0, 0, 0, 0.6); /* adjust this for more/less darkness */
+            z-index: 0;
+        }
+
+        .login-container {
+            background: rgba(0, 0, 0, 0.63);
+            padding: 40px;
+            border-radius: 8px;
+            text-align: center;
+            width: 350px;
+            position: relative;
+            z-index: 1; /* above the overlay */
+        }
+
+        h1 {
+            font-size: 30px;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        input {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            border: none;
+            border-radius: 4px;
+            background: #33333377;
+            color: white;
+        }
+
+        button {
+            width: 100%;
+            padding: 10px;
+            background: red;
+            border: none;
+            color: white;
+            font-size: 16px;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+
+        button:hover {
+            background: darkred;
+        }
+
+        .register {
+            margin-top: 15px;
+            font-size: 14px;
+        }
+
+        .register a {
+            color: white;
+            text-decoration: none;
+            font-weight: bold;
+        }
+
+        .register a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <!-- This dark overlay will shade the background image -->
+    <div class="overlay"></div>
+
+    <div class="login-container">
+        <h1>Login to Railway Reservation</h1>
+        <form id="loginForm">
+            <input type="text" id="username" placeholder="Username" required>
+            <input type="password" id="password" placeholder="Password" required>
+            <button type="submit">Sign In</button>
+        </form>
+        <p class="register">Don't have an account? <a href="signup.html">Sign up</a></p>
+    </div>
+
+    <script>
+        document.getElementById('loginForm').addEventListener('submit', async (event) => {
+            event.preventDefault();
+
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+
+            const userData = {
+                username: username,
+                password: password
+            };
+
+            try {
+                const response = await fetch('/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(userData)
+                });
+
+                const result = await response.json();
+                if (response.ok) {
+                    alert(result.message);
+                    window.location.href = 'home.html';
+                } else {
+                    alert(result.message || 'Error occurred during login');
+                }
+            } catch (error) {
+                alert('Error occurred during login, please try again.');
+            }
+        });
+    </script>
+</body>
+</html>

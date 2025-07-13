@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Train Booking</title>
+  <style>
+    /* [CSS remains unchanged — your layout and design are preserved] */
+    /* Only the JavaScript section was updated */
+    html, body {
+      height: 100%;
+      margin: 0;
+      font-family: Arial, sans-serif;
+      color: white;
+      background: url('OIP.PNG') no-repeat center center/cover;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      position: relative;
+    }
+    .overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100vh;
+      background: rgba(0, 0, 0, 0.7);
+      z-index: -1;
+    }
+    .home-button {
+      position: fixed;
+      top: 10px;
+      left: 10px;
+      text-decoration: none;
+      font-size: 18px;
+      color: white;
+      background: rgba(255, 255, 255, 0.2);
+      padding: 10px 15px;
+      border-radius: 6px;
+      transition: 0.3s ease;
+    }
+    .home-button:hover {
+      background: rgba(255, 255, 255, 0.4);
+    }
+    .home-button::before {
+      content: "←";
+      font-size: 20px;
+    }
+    .heading {
+      text-align: center;
+      font-size: 36px;
+      font-weight: bold;
+      margin-bottom: 20px;
+      text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.5);
+    }
+    .search-container {
+      background: rgba(255, 255, 255, 0.15);
+      padding: 40px;
+      border-radius: 12px;
+      box-shadow: 0px 6px 12px rgba(0, 0, 0, 0.3);
+      text-align: center;
+      backdrop-filter: blur(10px);
+      max-height: 90vh;
+      overflow-y: auto;
+      width: 90%;
+      max-width: 800px;
+    }
+    label {
+      font-size: 18px;
+      font-weight: bold;
+      display: block;
+      margin: 10px 0 5px;
+    }
+    input, select {
+      width: 100%;
+      padding: 10px;
+      font-size: 16px;
+      border-radius: 6px;
+      border: none;
+      margin-bottom: 15px;
+      background: rgba(255, 255, 255, 0.8);
+      color: black;
+    }
+    .btn-search {
+      background: linear-gradient(to right, #28a745, #218838);
+      color: white;
+      padding: 14px;
+      width: 100%;
+      border: none;
+      border-radius: 8px;
+      font-size: 18px;
+      cursor: pointer;
+      margin-top: 20px;
+    }
+    .btn-search:hover {
+      background: linear-gradient(to right, #218838, #1e7e34);
+      transform: scale(1.05);
+    }
+    .passenger-details {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 20px;
+      justify-content: space-between;
+    }
+    .passenger-card {
+      width: 48%;
+      padding: 20px;
+      border: 1px solid #fff;
+      border-radius: 8px;
+      background-color: rgba(0, 0, 0, 0.2);
+    }
+    .seat-row {
+      display: flex;
+      justify-content: center;
+      margin: 4px 0;
+    }
+    .seat {
+      width: 40px;
+      height: 40px;
+      margin: 4px;
+      border-radius: 4px;
+      background-color: #2ecc71;
+      color: black;
+      font-weight: bold;
+      cursor: pointer;
+      border: 2px solid white;
+    }
+    .seat.selected {
+      background-color: #f39c12;
+    }
+    @media (max-width: 768px) {
+      .passenger-card {
+        width: 100%;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="overlay"></div>
+  <a href="train-list.html" class="home-button">Back</a>
+  <div class="heading">Book Your Ticket</div>
+  <div class="search-container">
+    <h3>Train Details</h3>
+    <p><strong>Train Name:</strong> <span id="trainName">Loading...</span></p>
+    <p><strong>Train Number:</strong> <span id="trainNumber">Loading...</span></p>
+    <p><strong>From:</strong> <span id="fromStation">Loading...</span></p>
+    <p><strong>To:</strong> <span id="toStation">Loading...</span></p>
+    <p><strong>Date of Journey:</strong> <span id="journeyDate">Loading...</span></p>
+    <p><strong>Time:</strong> <span id="trainTime">Loading...</span></p>
+    <p><strong>Fare:</strong> ₹<span id="trainFare">Loading...</span></p>
+
+    <label for="numSeats">Number of Passengers:</label>
+    <input type="number" id="numSeats" min="1" max="6" placeholder="Enter number of passengers" onchange="generatePassengerDetails()"/>
+
+    <div id="passengerDetails" class="passenger-details"></div>
+
+    <button class="btn-search" onclick="confirmBooking()">Pay and Book</button>
+  </div>
+
+  <script>
+    const urlParams = new URLSearchParams(window.location.search);
+    const trainName = urlParams.get("trainName");
+    const trainNo = urlParams.get("trainNo");
+    const from = urlParams.get("from");
+    const to = urlParams.get("to");
+    const time = urlParams.get("time");
+    const baseFare = parseFloat(urlParams.get("fare"));
+    const date = urlParams.get("date");
+
+    document.getElementById("trainName").innerText = trainName || "N/A";
+    document.getElementById("trainNumber").innerText = trainNo || "N/A";
+    document.getElementById("fromStation").innerText = from || "N/A";
+    document.getElementById("toStation").innerText = to || "N/A";
+    document.getElementById("trainTime").innerText = time || "N/A";
+    document.getElementById("trainFare").innerText = baseFare || "N/A";
+    document.getElementById("journeyDate").innerText = date || "N/A";
+
+    function generatePassengerDetails() {
+      const numSeats = parseInt(document.getElementById("numSeats").value);
+      const container = document.getElementById("passengerDetails");
+      container.innerHTML = "";
+
+      for (let i = 1; i <= numSeats; i++) {
+        const div = document.createElement("div");
+        div.classList.add("passenger-card");
+
+        div.innerHTML = `
+          <h4>Passenger ${i}</h4>
+          <label for="name${i}">Full Name:</label>
+          <input type="text" id="name${i}" placeholder="Name" required />
+
+          <label for="age${i}">Age:</label>
+          <input type="number" id="age${i}" placeholder="Age" min="1" onchange="updateFare(${i})" required/>
+
+          <label for="gender${i}">Gender:</label>
+          <select id="gender${i}" required>
+            <option value="">Select Gender</option>
+            <option value="Male">Male</option>
+            <option value="Female">Female</option>
+            <option value="Other">Other</option>
+          </select>
+
+          <label for="class${i}">Class:</label>
+          <select id="class${i}" onchange="updateFare(${i})" required>
+            <option value="">Select Class</option>
+            <option value="general">General</option>
+            <option value="Sleeper">Sleeper</option>
+            <option value="AC 3-Tier">AC 3-Tier</option>
+            <option value="AC 2-Tier">AC 2-Tier</option>
+            <option value="AC 1-Tier">AC 1-Tier</option>
+          </select>
+
+          <label for="generalCategory${i}">General Category:</label>
+          <select id="generalCategory${i}">
+            <option value="">Select Category</option>
+            <option value="General">General</option>
+            <option value="Ladies">Ladies</option>
+            <option value="Disability">Person with Disability</option>
+          </select>
+
+          <label>Select Your Seat:</label>
+          <div class="seat-container" id="seatLayout${i}">
+            ${generateCompartmentSeats(i)}
+          </div>
+
+          <label for="fare${i}">Fare:</label>
+          <input type="number" id="fare${i}" value="${baseFare}" readonly/>
+        `;
+        container.appendChild(div);
+      }
+    }
+
+    function generateCompartmentSeats(index) {
+      const layout = [["W1", "C1", "A1", "SW1"], ["W2", "C2", "A2", "SW2"], ["W3", "C3", "A3", "SW3"], ["W4", "C4", "A4", "SW4"], ["W5", "C5", "A5", "SW5"], ["W6", "C6", "A6", "SW6"]];
+      let html = "";
+      layout.forEach((row, rowIndex) => {
+        html += `<div class="seat-row">`;
+        row.forEach((seatLabel, colIndex) => {
+          const seatId = `seat_${index}_${rowIndex}_${colIndex}`;
+          html += `<button class="seat" id="${seatId}" onclick="selectSeat('${seatId}')">${seatLabel}</button>`;
+        });
+        html += `</div>`;
+      });
+      return html;
+    }
+
+    function selectSeat(seatId) {
+      const seat = document.getElementById(seatId);
+      const parent = seat.closest(".seat-container");
+      parent.querySelectorAll(".seat").forEach(btn => btn.classList.remove("selected"));
+      seat.classList.add("selected");
+    }
+
+    function updateFare(i) {
+      const age = parseInt(document.getElementById(`age${i}`).value) || 0;
+      const travelClass = document.getElementById(`class${i}`).value;
+      let fare = baseFare;
+
+      switch (travelClass) {
+        case "Sleeper": fare *= 4; break;
+        case "AC 3-Tier": fare *= 3; break;
+        case "AC 2-Tier": fare = fare * 2 + 20; break;
+        case "AC 1-Tier": fare *= 2; break;
+        default: break;
+      }
+
+      if (age < 12 || age > 75) fare /= 2;
+
+      document.getElementById(`fare${i}`).value = fare.toFixed(2);
+    }
+
+    async function confirmBooking() {
+      const numSeats = parseInt(document.getElementById("numSeats").value);
+      if (!numSeats || numSeats < 1) return alert("Please enter a valid number of passengers.");
+
+      let passengers = [];
+      let totalFare = 0;
+
+      for (let i = 1; i <= numSeats; i++) {
+        const name = document.getElementById(`name${i}`).value;
+        const age = parseInt(document.getElementById(`age${i}`).value);
+        const gender = document.getElementById(`gender${i}`).value;
+        const classType = document.getElementById(`class${i}`).value;
+        const category = document.getElementById(`generalCategory${i}`).value;
+        const fare = parseFloat(document.getElementById(`fare${i}`).value);
+
+        if (!name || !age || !gender || !classType || isNaN(fare)) {
+          alert(`Please fill out all required fields for Passenger ${i}`);
+          return;
+        }
+
+        const selectedSeat = document.querySelector(`#seatLayout${i} .seat.selected`);
+        const seat = selectedSeat ? selectedSeat.innerText : "Unassigned";
+
+        passengers.push({ name, age, gender, classType, category, seat, fare });
+        totalFare += fare;
+      }
+
+      const bookingData = {
+        trainName,
+        trainNo,
+        fromStation: from,
+        toStation: to,
+        time,
+        date,
+        passengers,
+        totalFare
+      };
+
+      try {
+        const response = await fetch("http://localhost:3000/book", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify(bookingData)
+        });
+
+        const result = await response.json();
+
+        if (response.ok && result.bookingId) {
+          alert(`✅ Booking confirmed! Total Fare: ₹${totalFare.toFixed(2)}`);
+          window.location.href = `confirm.html?bookingId=${result.bookingId}`;
+        } else {
+          alert("❌ Booking failed: " + (result.message || "Unknown error"));
+        }
+      } catch (error) {
+        console.error("❌ Error during booking:", error);
+        alert("An error occurred while booking.");
+      }
+    }
+  </script>
+</body>
+</html>

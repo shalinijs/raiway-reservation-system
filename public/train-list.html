@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Train List - Railway Reservation</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-image: url('OIP.png');
+            background-size: cover;
+            background-position: center;
+            color: #333;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 2.5rem;
+            color: black;
+        }
+
+        table {
+            width: 90%;
+            border-collapse: collapse;
+            background-color: black;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        th, td {
+            padding: 12px;
+            text-align: center;
+            border: 1px solid #ddd;
+        }
+
+        th {
+            background-color: #4CAF50;
+            color: white;
+        }
+
+        td {
+            background-color: #f9f9f9;
+        }
+
+        button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            cursor: pointer;
+            border-radius: 5px;
+        }
+
+        button:hover {
+            background-color: #45a049;
+        }
+
+        .train-list-container {
+            width: 95%;
+            max-width: 1200px;
+            padding: 20px;
+            box-sizing: border-box;
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            opacity: 0.9;
+        }
+    </style>
+</head>
+<body>
+    <div class="train-list-container">
+        <h1>Available Trains</h1>
+        <table id="train-list">
+            <thead>
+                <tr>
+                    <th>Train Name</th>
+                    <th>Train No</th>
+                    <th>From</th>
+                    <th>To</th>
+                    <th>Time</th>
+                    <th>Date of Journey</th> <!-- Added column -->
+                    <th>Seats</th>
+                    <th>Fare</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Rows will be added by JS -->
+            </tbody>
+        </table>
+    </div>
+
+    <script>
+        const params = new URLSearchParams(window.location.search);
+        const from = params.get('from');
+        const to = params.get('to');
+        const date = params.get('date');
+
+        // Check for required parameters
+        if (!from || !to || !date) {
+            alert("Missing search parameters");
+            window.location.href = "index.html";
+        }
+
+        // Fetch trains matching the search criteria
+        fetch(`/search-trains?from=${from}&to=${to}&date=${date}`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.length === 0) {
+                    alert("No trains found for the selected criteria");
+                } else {
+                    displayTrains(data);
+                }
+            })
+            .catch(error => {
+                console.error("Error fetching trains:", error);
+                alert("Failed to fetch trains.");
+            });
+
+        // Function to populate the train table
+        function displayTrains(trains) {
+            const tbody = document.querySelector("#train-list tbody");
+            tbody.innerHTML = ""; // Clear any existing rows
+
+            trains.forEach(train => {
+                const row = document.createElement("tr");
+                row.innerHTML = `
+                    <td>${train.trainName}</td>
+                    <td>${train.trainNo}</td>
+                    <td>${train.fromStation}</td>
+                    <td>${train.toStation}</td>
+                    <td>${train.time}</td>
+                    <td>${date}</td> <!-- Display date -->
+                    <td>${train.seats}</td>
+                    <td>${train.fare}</td>
+                    <td>
+                        <button onclick="bookTrain(
+                            '${train.trainNo}', 
+                            '${train.trainName}', 
+                            '${train.fare}', 
+                            '${train.fromStation}', 
+                            '${train.toStation}', 
+                            '${train.time}', 
+                            '${date}')">Book</button>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        // Redirect to booking page with train and journey info
+        function bookTrain(trainNo, trainName, fare, from, to, time, date) {
+            const bookingURL = `booking.html?trainName=${encodeURIComponent(trainName)}&trainNo=${encodeURIComponent(trainNo)}&fare=${encodeURIComponent(fare)}&from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}&time=${encodeURIComponent(time)}&date=${encodeURIComponent(date)}`;
+            window.location.href = bookingURL;
+        }
+    </script>
+</body>
+</html>

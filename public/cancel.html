@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Cancel Ticket</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-image: url('OIP.PNg');
+            background-size: cover;
+            background-position: center;
+            margin: 0;
+            padding: 30px;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        h1 {
+            font-size: 36px;
+            color: blue;
+            text-shadow: 2px 2px 4px rgba(226, 101, 101, 0.5);
+            margin-bottom: 30px;
+        }
+
+        .container {
+            width: 350px;
+            background: rgba(255, 255, 255, 0.8);
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        h2 {
+            text-align: center;
+            margin-bottom: 20px;
+            color: #333;
+        }
+
+        .form-group {
+            margin-bottom: 12px;
+        }
+
+        label {
+            display: block;
+            font-weight: bold;
+            margin-bottom: 5px;
+            color: #444;
+        }
+
+        input,
+        select {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        th,
+        td {
+            border: 1px solid #ccc;
+            padding: 8px;
+            text-align: center;
+            font-size: 14px;
+        }
+
+        th {
+            background-color: #f0f0f0;
+        }
+
+        .cancel-btn {
+            display: block;
+            width: 100%;
+            padding: 12px;
+            margin-top: 25px;
+            background-color: #d9534f;
+            color: white;
+            font-size: 16px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+
+        .cancel-btn:hover {
+            background-color: #c9302c;
+        }
+
+        .message {
+            margin-top: 20px;
+            font-size: 18px;
+            color: green;
+            text-align: center;
+            font-weight: bold;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>Cancel Ticket</h1>
+    <div class="container">
+        <h2>Cancel Ticket</h2>
+
+        <!-- Ticket Input Form -->
+        <div class="form-group">
+            <label for="pnr">PNR No.</label>
+            <input type="text" id="pnr" placeholder="Enter PNR Number">
+        </div>
+        <div class="form-group">
+            <label for="transaction">Ticket ID</label>
+            <input type="text" id="transaction" placeholder="Enter Ticket ID">
+        </div>
+        <div class="form-group">
+            <label for="train">Train No.</label>
+            <input type="text" id="train" placeholder="Enter Train Number">
+        </div>
+        <div class="form-group">
+            <label for="from">From</label>
+            <input type="text" id="from" placeholder="Enter Departure Station">
+        </div>
+        <div class="form-group">
+            <label for="to">To</label>
+            <input type="text" id="to" placeholder="Enter Destination Station">
+        </div>
+        <div class="form-group">
+            <label for="date">Date of Journey</label>
+            <input type="date" id="date">
+        </div>
+
+        <!-- Passenger Details Table -->
+        <h3>Passenger Details</h3>
+        <table>
+            <tr>
+                <th>S.No.</th>
+                <th>Passenger Name</th>
+                <th>Age</th>
+                <th>Sex</th>
+            </tr>
+            <tr>
+                <td>1</td>
+                <td><input type="text" id="name1" placeholder="Name" style="width: 90%;"></td>
+                <td><input type="number" id="age1" placeholder="Age" style="width: 60px;"></td>
+                <td>
+                    <select id="sex1" style="width: 80px;">
+                        <option value="">Select</option>
+                        <option value="M">Male</option>
+                        <option value="F">Female</option>
+                        <option value="O">Other</option>
+                    </select>
+                </td>
+            </tr>
+        </table>
+
+        <button class="cancel-btn" onclick="cancelTicket()">Cancel Ticket</button>
+        <div id="resultMsg" class="message"></div>
+    </div>
+
+    <script>
+        async function cancelTicket() {
+            const pnr = document.getElementById("pnr").value.trim();
+            const ticketId = document.getElementById("transaction").value.trim();
+
+            if (!pnr || !ticketId) {
+                alert("Please enter both PNR and Ticket ID.");
+                return;
+            }
+
+            const confirmCancel = confirm(`Are you sure you want to cancel the ticket with PNR: ${pnr}?`);
+            if (!confirmCancel) return;
+
+            try {
+                // Validate the ticket by PNR and ticketId
+                const res = await fetch(`/api/tickets/validate?pnr=${pnr}&ticketId=${ticketId}`);
+                const data = await res.json();
+
+                if (!res.ok) {
+                    throw new Error(data.message || "Ticket not found.");
+                }
+
+                // Delete the ticket if found
+                const delRes = await fetch(`/api/tickets/${data._id}`, {
+                    method: 'DELETE'
+                });
+
+                if (!delRes.ok) {
+                    const delData = await delRes.json();
+                    throw new Error(delData.message || "Ticket deletion failed.");
+                }
+
+                document.getElementById("resultMsg").innerText = "✅ Ticket cancelled successfully!";
+                const btn = document.querySelector(".cancel-btn");
+                btn.disabled = true;
+                btn.innerText = "Ticket Cancelled";
+                btn.style.backgroundColor = "#aaa";
+                btn.style.cursor = "not-allowed";
+
+                setTimeout(() => {
+                    window.location.href = "index.html"; // Redirect to home page
+                }, 2500);
+
+            } catch (err) {
+                alert("❌ Error: " + err.message);
+            }
+        }
+    </script>
+</body>
+
+</html>

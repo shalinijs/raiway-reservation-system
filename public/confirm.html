@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Booking Confirmation</title>
+  <style>
+    html, body {
+      height: 100%;
+      margin: 0;
+      font-family: Arial, sans-serif;
+      color: white;
+      background: url('OIP.PNG') no-repeat center center/cover;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      position: relative;
+    }
+
+    .overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100vh;
+      background: rgba(0, 0, 0, 0.7);
+      z-index: -1;
+    }
+
+    .container {
+      background: rgba(255, 255, 255, 0.15);
+      padding: 40px;
+      border-radius: 12px;
+      box-shadow: 0px 6px 12px rgba(0, 0, 0, 0.3);
+      backdrop-filter: blur(10px);
+      text-align: center;
+      max-width: 900px;
+      width: 90%;
+      margin: 20px;
+    }
+
+    h1 {
+      font-size: 36px;
+      font-weight: bold;
+      margin-bottom: 20px;
+      text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.5);
+    }
+
+    h2 {
+      font-size: 28px;
+      margin-top: 10px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 20px;
+    }
+
+    table, th, td {
+      border: 1px solid #fff;
+    }
+
+    th, td {
+      padding: 12px;
+      text-align: left;
+      background: rgba(0, 0, 0, 0.2);
+    }
+
+    th {
+      background-color: rgba(0, 0, 0, 0.4);
+      font-weight: bold;
+    }
+
+    .btn {
+      background: linear-gradient(to right, #28a745, #218838);
+      color: white;
+      padding: 12px 24px;
+      border: none;
+      border-radius: 6px;
+      font-size: 16px;
+      cursor: pointer;
+      margin-top: 20px;
+    }
+
+    .btn:hover {
+      background: linear-gradient(to right, #218838, #1e7e34);
+      transform: scale(1.05);
+    }
+
+    p {
+      font-size: 16px;
+    }
+  </style>
+</head>
+<body>
+  <div class="overlay"></div>
+  <div class="container">
+    <h1>Booking Confirmed</h1>
+    <div id="details">
+      <p>Loading booking details...</p>
+    </div>
+    <button id="submitBtn" class="btn" style="display:none;">Generate Ticket</button>
+  </div>
+
+  <script>
+    const params = new URLSearchParams(window.location.search);
+    const bookingId = params.get('bookingId');
+    const detailsDiv = document.getElementById('details');
+    const submitBtn = document.getElementById('submitBtn');
+    let bookingData = null;
+
+    if (!bookingId) {
+      detailsDiv.innerHTML = "<p style='color:red;'>No booking ID provided.</p>";
+    } else {
+      fetch(`/booking/${bookingId}`)
+        .then(response => {
+          if (!response.ok) throw new Error('Booking not found');
+          return response.json();
+        })
+        .then(data => {
+          bookingData = data;
+
+          // Handle and validate date parsing
+          let journeyDateStr = "N/A";
+          if (data.date) {
+            const parsedDate = new Date(data.date);
+            journeyDateStr = isNaN(parsedDate) ? "Invalid Date" : parsedDate.toLocaleDateString();
+          }
+
+          const bookingDateStr = data.bookingDate
+            ? new Date(data.bookingDate).toLocaleString()
+            : "N/A";
+
+          detailsDiv.innerHTML = `
+            <h2>Train: ${data.trainName} (${data.trainNo})</h2>
+            <p><strong>From:</strong> ${data.fromStation} → <strong>To:</strong> ${data.toStation}</p>
+            <p><strong>Departure Time:</strong> ${data.time}</p>
+            <p><strong>Journey Date:</strong> ${journeyDateStr}</p>
+            <p><strong>Booking Date:</strong> ${bookingDateStr}</p>
+            <p><strong>Total Fare:</strong> ₹${data.totalFare}</p>
+            <h3>Passenger Details</h3>
+            <table>
+              <thead>
+                <tr>
+                  <th>Name</th>
+                  <th>Age</th>
+                  <th>Gender</th>
+                  <th>Class</th>
+                  <th>Category</th>
+                  <th>Seat</th>
+                  <th>Fare (₹)</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${data.passengers.map(p => `
+                  <tr>
+                    <td>${p.name}</td>
+                    <td>${p.age}</td>
+                    <td>${p.gender}</td>
+                    <td>${p.classType}</td>
+                    <td>${p.category}</td>
+                    <td>${p.seat}</td>
+                    <td>${p.fare}</td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+          `;
+          submitBtn.style.display = 'inline-block';
+        })
+        .catch(error => {
+          detailsDiv.innerHTML = `<p style='color:red;'>Error loading booking details: ${error.message}</p>`;
+        });
+    }
+
+    submitBtn.addEventListener('click', () => {
+      if (bookingData) {
+        localStorage.setItem('bookingData', JSON.stringify(bookingData));
+        window.location.href = `ticket.html?bookingId=${bookingId}`;
+      } else {
+        alert("Booking data not loaded.");
+      }
+    });
+  </script>
+</body>
+</html>

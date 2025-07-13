@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Railway Ticket</title>
+  <style>
+    html, body {
+      height: 100%;
+      margin: 0;
+      font-family: Arial, sans-serif;
+      color: white;
+      background: url('OIP.PNG') no-repeat center center/cover;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      position: relative;
+    }
+
+    .overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100vh;
+      background: rgba(0, 0, 0, 0.7);
+      z-index: -1;
+    }
+
+    .ticket {
+      background: rgba(255, 255, 255, 0.15);
+      padding: 40px;
+      border-radius: 12px;
+      box-shadow: 0px 6px 12px rgba(0, 0, 0, 0.3);
+      backdrop-filter: blur(10px);
+      text-align: center;
+      max-width: 900px;
+      width: 90%;
+      margin: 20px;
+    }
+
+    h2, h3 {
+      color: white;
+      margin-bottom: 10px;
+    }
+
+    .info p {
+      margin: 6px 0;
+      font-size: 16px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 20px;
+    }
+
+    table, th, td {
+      border: 1px solid #fff;
+    }
+
+    th, td {
+      padding: 12px;
+      text-align: left;
+      background: rgba(0, 0, 0, 0.2);
+    }
+
+    th {
+      background-color: rgba(0, 0, 0, 0.4);
+      font-weight: bold;
+    }
+
+    .btn {
+      background: linear-gradient(to right, #28a745, #218838);
+      color: white;
+      padding: 12px 24px;
+      border: none;
+      border-radius: 6px;
+      font-size: 16px;
+      cursor: pointer;
+      margin-top: 20px;
+    }
+
+    .btn:hover {
+      background: linear-gradient(to right, #218838, #1e7e34);
+      transform: scale(1.05);
+    }
+  </style>
+
+  <!-- EmailJS SDK -->
+  <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
+  <script>
+    emailjs.init('8impTlLr9BkftTbvz'); // Replace with your EmailJS Public Key
+  </script>
+</head>
+<body>
+  <div class="overlay"></div>
+  <div class="ticket" id="ticketContent">
+    <h2>Indian Railways Ticket</h2>
+    <h3>Journey Ticket</h3>
+    <div class="info">
+      <p><strong>PNR:</strong> <span id="pnr"></span></p>
+      <p><strong>Ticket ID:</strong> <span id="ticketId"></span></p>
+      <p><strong>Train Number:</strong> <span id="trainNo"></span></p>
+      <p><strong>Train Name:</strong> <span id="trainName"></span></p>
+      <p><strong>From:</strong> <span id="fromStation"></span> &nbsp;&nbsp; <strong>To:</strong> <span id="toStation"></span></p>
+      <p><strong>Date of Journey:</strong> <span id="journeyDate"></span></p>
+    </div>
+
+    <h3>Passenger Details</h3>
+    <table id="passengerTable">
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Age</th>
+          <th>Gender</th>
+          <th>Class</th>
+          <th>Category</th>
+          <th>Seat</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+
+    <button class="btn" onclick="downloadTicket()">Download Ticket</button>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+  <script>
+    const bookingData = JSON.parse(localStorage.getItem('bookingData'));
+    const userEmail = localStorage.getItem('userEmail');
+    const pnr = 'PNR' + Math.floor(Math.random() * 1000000000);
+    const ticketId = 'TID' + Date.now();
+
+    if (bookingData) {
+      document.getElementById('pnr').textContent = pnr;
+      document.getElementById('ticketId').textContent = ticketId;
+      document.getElementById('trainNo').textContent = bookingData.trainNo;
+      document.getElementById('trainName').textContent = bookingData.trainName;
+      document.getElementById('fromStation').textContent = bookingData.fromStation;
+      document.getElementById('toStation').textContent = bookingData.toStation;
+      document.getElementById('journeyDate').textContent = new Date(bookingData.date).toLocaleDateString();
+
+      const tbody = document.querySelector("#passengerTable tbody");
+      bookingData.passengers.forEach(p => {
+        const row = `
+          <tr>
+            <td>${p.name}</td>
+            <td>${p.age}</td>
+            <td>${p.gender}</td>
+            <td>${p.classType}</td>
+            <td>${p.category}</td>
+            <td>${p.seat}</td>
+          </tr>
+        `;
+        tbody.innerHTML += row;
+      });
+
+      if (userEmail) {
+        sendEmail(userEmail);
+      }
+    } else {
+      document.querySelector(".ticket").innerHTML = "<h3 style='color: red;'>No booking data available</h3>";
+    }
+
+    function sendEmail(email) {
+      const passengerList = bookingData.passengers.map((p, i) => 
+        `Passenger ${i + 1}: ${p.name}, Age: ${p.age}, Gender: ${p.gender}, Class: ${p.classType}, Category: ${p.category}, Seat: ${p.seat}`
+      ).join('\n');
+
+      const templateParams = {
+        to_email: email,
+        trainNo: bookingData.trainNo,
+        trainName: bookingData.trainName,
+        fromStation: bookingData.fromStation,
+        toStation: bookingData.toStation,
+        journeyDate: new Date(bookingData.date).toLocaleDateString(),
+        pnr: pnr,
+        ticketId: ticketId,
+        passengerList: passengerList
+      };
+
+      emailjs.send('service_0z4sx4s', 'template_03qhl6d', templateParams)
+        .then(() => console.log("Email sent successfully"))
+        .catch(error => {
+          console.error("EmailJS Error:", error);
+          alert("Failed to send ticket email.");
+        });
+    }
+
+    function downloadTicket() {
+      const original = document.getElementById('ticketContent');
+      const clone = original.cloneNode(true);
+
+      // Override styles for PDF
+      clone.style.color = '#000';
+      clone.style.background = '#fff';
+      clone.style.boxShadow = 'none';
+      clone.style.backdropFilter = 'none';
+
+      clone.querySelectorAll('*').forEach(el => {
+        el.style.color = '#000';
+        el.style.background = '#fff';
+        el.style.borderColor = '#000';
+      });
+
+      const container = document.createElement('div');
+      container.style.position = 'fixed';
+      container.style.top = '0';
+      container.style.left = '0';
+      container.style.width = '100%';
+      container.style.background = '#fff';
+      container.style.zIndex = '9999';
+      container.appendChild(clone);
+      document.body.appendChild(container);
+
+      html2pdf().from(clone).set({
+        margin: 0.5,
+        filename: 'ticket.pdf',
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: { scale: 2, backgroundColor: '#ffffff' },
+        jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
+      }).save().then(() => {
+        document.body.removeChild(container); // Clean up
+      });
+    }
+    fetch('/api/tickets', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        pnr,
+        ticketId,
+        trainNo: bookingData.trainNo,
+        trainName: bookingData.trainName,
+        fromStation: bookingData.fromStation,
+        toStation: bookingData.toStation,
+        journeyDate: new Date(bookingData.date).toLocaleDateString(),
+        passengers: bookingData.passengers
+      })
+    })
+    .then(res => res.json())
+    .then(data => console.log("Ticket saved:", data))
+    .catch(err => console.error("Error saving ticket:", err));
+    
+  </script>
+</body>
+</html>
